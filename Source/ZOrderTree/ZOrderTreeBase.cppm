@@ -783,7 +783,7 @@ export
                 }
             }
 
-            static constexpr morton_grid_id_type part1By2(grid_id_type n) noexcept {
+            static constexpr morton_grid_id_type splitEvery1BitBy2Bit(grid_id_type n) noexcept {
                 // n = ----------------------9876543210 : Bits initially
                 // n = ------98----------------76543210 : After (1)
                 // n = ------98--------7654--------3210 : After (2)
@@ -799,7 +799,7 @@ export
             }
 
             // Separates low 16 bits of input by one bit
-            static constexpr morton_grid_id_type part1By1(grid_id_type n) noexcept {
+            static constexpr morton_grid_id_type splitEvery1BitBy1Bit(grid_id_type n) noexcept {
                 // n = ----------------fedcba9876543210 : Bits initially
                 // n = --------fedcba98--------76543210 : After (1)
                 // n = ----fedc----ba98----7654----3210 : After (2)
@@ -820,9 +820,9 @@ export
                 if constexpr (nDimension == 1)
                     return morton_grid_id_type(aidGrid[0]);
                 else if constexpr (nDimension == 2)
-                    return (part1By1(aidGrid[1]) << 1) + part1By1(aidGrid[0]);
+                    return (splitEvery1BitBy1Bit(aidGrid[1]) << 1) + splitEvery1BitBy1Bit(aidGrid[0]);
                 else if constexpr (nDimension == 3)
-                    return (part1By2(aidGrid[2]) << 2) + (part1By2(aidGrid[1]) << 1) + part1By2(aidGrid[0]);
+                    return (splitEvery1BitBy2Bit(aidGrid[2]) << 2) + (splitEvery1BitBy2Bit(aidGrid[1]) << 1) + splitEvery1BitBy2Bit(aidGrid[0]);
                 else {
                     auto msb = aidGrid[0];
                     for (dim_type iDimension = 1; iDimension < nDimension; ++iDimension)
