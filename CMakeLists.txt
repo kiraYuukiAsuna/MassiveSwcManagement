@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_executable(MassiveSwcManagement
         main.cpp
-        Source/ZOrderTree/BitsetUtil.cppm
-        Source/ZOrderTree/ZOrderTreeBase.cppm
 )
 
 target_sources(MassiveSwcManagement PRIVATE
@@ -16,6 +14,7 @@ target_sources(MassiveSwcManagement PRIVATE
         Source/STLModules/std.ixx
         Source/STLModules/std.compat.ixx
         Source/ZOrderTree/BitsetUtil.cppm
-        Source/ZOrderTree/ZOrderTreeBase.cppm
+        Source/ZOrderTree/ZOrderTree.cppm
+        Source/ZOrderTree/TypeAlias.cppm
 )
 
