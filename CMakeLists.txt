@@ -16,5 +16,10 @@ target_sources(MassiveSwcManagement PRIVATE
         Source/ZOrderTree/BitsetUtil.cppm
         Source/ZOrderTree/ZOrderTree.cppm
         Source/ZOrderTree/TypeAlias.cppm
+        Source/FileIo/SwcIo.cppm
+)
+
+target_include_directories(MassiveSwcManagement PRIVATE
+        Source
 )
 

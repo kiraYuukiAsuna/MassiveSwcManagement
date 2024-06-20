@@ -31,7 +31,7 @@ export
         using EntityIdType = size_t;
 
         // Adaptor concepts
-        template<class AdaptorType, typename VectorType, typename BoxType, typename GeometryType = double>
+        template<class AdaptorType, typename VectorType, typename BoxType, typename GeometryType>
         concept AdaptorBasicsConcept =
                 requires(VectorType&pt, DimType iDimension)
                 {
@@ -53,7 +53,7 @@ export
                 }
                 ;
 
-        template<class AdaptorType, typename VectorType, typename BoxType, typename GeometryType = double>
+        template<class AdaptorType, typename VectorType, typename BoxType, typename GeometryType>
         concept AdaptorConcept =
                 requires { AdaptorBasicsConcept<AdaptorType, VectorType, BoxType, GeometryType>; }
                 && requires(BoxType const&box, VectorType const&pt)
@@ -76,7 +76,7 @@ export
 
 
         // Adaptors
-        template<DimType nDimension, typename VectorType, typename BoxType, typename GeometryType = double>
+        template<DimType nDimension, typename VectorType, typename BoxType, typename GeometryType>
         struct AdaptorBasicsGeneral {
             static constexpr GeometryType& point_comp(VectorType&pt, DimType iDimension) noexcept {
                 return pt[iDimension];
@@ -94,7 +94,7 @@ export
 
 
         template<DimType nDimension, typename VectorType, typename BoxType, typename AdaptorBasicsType, typename
-            GeometryType = double>
+            GeometryType>
             requires AdaptorBasicsConcept<AdaptorBasicsType, VectorType, BoxType, GeometryType>
         struct AdaptorBaseGeneral : AdaptorBasicsType {
             using base = AdaptorBasicsType;
@@ -275,7 +275,7 @@ export
                 }
             }
 
-            static constexpr std::optional<double> is_ray_hit(BoxType const&box, VectorType const&rayBasePoint,
+            static constexpr std::optional<float> is_ray_hit(BoxType const&box, VectorType const&rayBasePoint,
                                                               VectorType const&rayHeading) noexcept {
                 if (does_box_contain_point(box, rayBasePoint))
                     return 0.0;
@@ -283,9 +283,9 @@ export
                 auto constexpr&ptBoxMin = base::box_min_c(box);
                 auto constexpr&ptBoxMax = base::box_max_c(box);
 
-                auto constexpr inf = std::numeric_limits<double>::infinity();
+                auto constexpr inf = std::numeric_limits<float>::infinity();
 
-                auto aRMinMax = std::array<std::array<double, nDimension>, 2>();
+                auto aRMinMax = std::array<std::array<float, nDimension>, 2>();
                 for (DimType iDimension = 0; iDimension < nDimension; ++iDimension) {
                     auto constexpr hComp = base::point_comp_c(rayHeading, iDimension);
                     if (hComp == 0) {
@@ -316,13 +316,13 @@ export
         };
 
 
-        template<DimType nDimension, typename VectorType, typename BoxType, typename GeometryType = double>
+        template<DimType nDimension, typename VectorType, typename BoxType, typename GeometryType>
         using AdaptorGeneral = AdaptorBaseGeneral<nDimension, VectorType, BoxType, AdaptorBasicsGeneral<nDimension,
             VectorType, BoxType, GeometryType>, GeometryType>;
 
 
         template<DimType nDimension, typename VectorType, typename BoxType, typename AdaptorType = AdaptorGeneral<
-            nDimension, VectorType, BoxType, double>, typename GeometryType = double>
+            nDimension, VectorType, BoxType, float>, typename GeometryType = float>
             requires AdaptorConcept<AdaptorType, VectorType, BoxType, GeometryType>
         class ZOrderHashTreeBase {
             static_assert(0 < nDimension && nDimension < 64);
@@ -450,10 +450,10 @@ export
             GridIdType m_nRasterResolutionMax = {};
             GridIdType m_IdSlotMax = {};
             MaxElementType m_nElementMax = 11;
-            double m_rVolume = {};
-            std::array<double, nDimension> m_Rasterizer;
-            std::array<double, nDimension> m_BoxSize;
-            std::array<double, nDimension> m_MinPoint;
+            float m_rVolume = {};
+            std::array<float, nDimension> m_Rasterizer;
+            std::array<float, nDimension> m_BoxSize;
+            std::array<float, nDimension> m_MinPoint;
 
         protected: // Aid functions
             template<size_t N>
@@ -471,14 +471,14 @@ export
             }
 
         protected: // Grid functions
-            static constexpr std::tuple<std::array<double, nDimension>, std::array<double, nDimension>>
+            static constexpr std::tuple<std::array<float, nDimension>, std::array<float, nDimension>>
             getGridRasterizer(
                 VectorType const&p0, VectorType const&p1, GridIdType n_divide) noexcept {
-                auto ret = std::tuple<std::array<double, nDimension>, std::array<double, nDimension>>{};
+                auto ret = std::tuple<std::array<float, nDimension>, std::array<float, nDimension>>{};
                 auto&[aRasterizer, aBoxSize] = ret;
-                auto const rn_divide = static_cast<double>(n_divide);
+                auto const rn_divide = static_cast<float>(n_divide);
                 for (DimType iDimension = 0; iDimension < nDimension; ++iDimension) {
-                    aBoxSize[iDimension] = static_cast<double>(
+                    aBoxSize[iDimension] = static_cast<float>(
                         AdaptorType::point_comp_c(p1, iDimension) - AdaptorType::point_comp_c(p0, iDimension));
                     aRasterizer[iDimension] = aBoxSize[iDimension] == 0 ? 1.0 : (rn_divide / aBoxSize[iDimension]);
                 }
@@ -491,7 +491,7 @@ export
                 for (DimType iDimension = 0; iDimension < nDimension; ++iDimension) {
                     auto const local_comp = AdaptorType::point_comp_c(pe, iDimension) - AdaptorType::point_comp_c(
                                                 AdaptorType::box_min_c(this->m_Box), iDimension);
-                    auto raster_id = static_cast<double>(local_comp) * this->m_Rasterizer[iDimension];
+                    auto raster_id = static_cast<float>(local_comp) * this->m_Rasterizer[iDimension];
                     aid[iDimension] = std::min<GridIdType>(this->m_IdSlotMax, static_cast<GridIdType>(raster_id));
                 }
                 return aid;
@@ -503,10 +503,10 @@ export
 
                 auto aid = std::array<std::array<GridIdType, nDimension>, 2>{};
                 for (DimType iDimension = 0; iDimension < nDimension; ++iDimension) {
-                    auto constexpr ridMin = static_cast<double>(
+                    auto constexpr ridMin = static_cast<float>(
                                                 AdaptorType::point_comp_c(AdaptorType::box_min_c(box), iDimension) -
                                                 AdaptorType::point_comp_c(p0, iDimension)) * m_Rasterizer[iDimension];
-                    auto constexpr ridMax = static_cast<double>(
+                    auto constexpr ridMax = static_cast<float>(
                                                 AdaptorType::point_comp_c(AdaptorType::box_max_c(box), iDimension) -
                                                 AdaptorType::point_comp_c(p0, iDimension)) * m_Rasterizer[iDimension];
 
@@ -537,7 +537,7 @@ export
 
                 auto&nodeChild = m_Nodes[kChild];
                 if constexpr (std::is_integral_v<GeometryType>) {
-                    std::array<double, nDimension> ptNodeMin = this->m_MinPoint, ptNodeMax;
+                    std::array<float, nDimension> ptNodeMin = this->m_MinPoint, ptNodeMax;
 
                     auto constexpr nDepth = this->GetDepth(kChild);
                     auto mask = MortonNodeIdType{1} << (nDepth * nDimension - 1);
@@ -702,7 +702,7 @@ export
 
                 auto const nLeaf = nElement / nElementMax;
                 // nLeaf = (2^nDepth)^nDimension
-                return std::clamp(static_cast<DepthType>(std::log2(nLeaf) / static_cast<double>(nDimension)),
+                return std::clamp(static_cast<DepthType>(std::log2(nLeaf) / static_cast<float>(nDimension)),
                                   DepthType(2), DepthType(10));
             }
 
@@ -877,7 +877,7 @@ export
 
                 LOOPIVDEP
                 for (DimType iDimension = 0; iDimension < nDimension; ++iDimension)
-                    this->m_MinPoint[iDimension] = static_cast<double>(AdaptorType::point_comp_c(
+                    this->m_MinPoint[iDimension] = static_cast<float>(AdaptorType::point_comp_c(
                         AdaptorType::box_min_c(this->m_Box), iDimension));
             }
 
@@ -993,7 +993,7 @@ export
 
                 auto constexpr nDepth = GetDepth(keyNode);
                 auto constexpr nRasterResolution = calcPower(2, nDepth);
-                auto constexpr rMax = 1.0 / static_cast<double>(nRasterResolution);
+                auto constexpr rMax = 1.0 / static_cast<float>(nRasterResolution);
 
                 auto constexpr one = MortonGridIdType{1};
                 auto keyShifted = keyNode; // RemoveSentinelBit(key, nDepth);
@@ -1140,8 +1140,8 @@ export
 
 
             template<typename data_type, bool fRangeMustContain = false, bool fIdCheck = false>
-            void rangeSearch(BoxType const&range, std::span<data_type const> const&vData, double rVolumeRange,
-                             double rVolumeParent, Node const&nodeParent, std::vector<EntityIdType>&sidFound,
+            void rangeSearch(BoxType const&range, std::span<data_type const> const&vData, float rVolumeRange,
+                             float rVolumeParent, Node const&nodeParent, std::vector<EntityIdType>&sidFound,
                              EntityIdType idMin = 0) const noexcept {
                 rangeSearchCopy<data_type, fRangeMustContain, fIdCheck>(range, vData, nodeParent, sidFound, idMin);
 
@@ -1219,7 +1219,7 @@ export
                             AdaptorType::point_comp_c(
                                 AdaptorType::box_min_c(range), iDimension);
 
-                auto const rVolumeNode = this->m_rVolume / static_cast<double>(1 << (nDimension * nDepth));
+                auto const rVolumeNode = this->m_rVolume / static_cast<float>(1 << (nDimension * nDepth));
 
                 auto const nidFoundEstimation = this->m_rVolume < 0.01
                                                     ? 10
@@ -1237,6 +1237,10 @@ export
                             range, vData, this->GetNode(keyNodeSmallest), sidFound, idMin);
                 }
 
+                // std::cout<<m_Nodes.load_factor()<<std::endl;
+                // std::cout<<m_Nodes.max_load_factor()<<std::endl;
+                // std::cout<<m_Nodes.bucket_count()<<std::endl;
+
                 return true;
             }
 
@@ -1248,14 +1252,14 @@ export
             }
 
 
-            // Doubles the handled space relative to the root. iRootNew defines the relative location in the new space
+            // floats the handled space relative to the root. iRootNew defines the relative location in the new space
             //TODO IMPLEMENT void Extend(morton_node_id_type_cref iRootNew = 0) {}
         };
 
 
         // OrthoTreePoint: Non-owning container which spatially organize point ids in N dimension space into a hash-table by Morton Z order.
         template<DimType nDimension, typename VectorType, typename BoxType, typename AdaptorType = AdaptorGeneral<
-            nDimension, VectorType, BoxType, double>, typename GeometryType = double>
+            nDimension, VectorType, BoxType, float>, typename GeometryType = float>
         class ZOrderTreePoint : public ZOrderHashTreeBase<nDimension, VectorType, BoxType, AdaptorType, GeometryType> {
         protected:
             using base = ZOrderHashTreeBase<nDimension, VectorType, BoxType, AdaptorType, GeometryType>;
@@ -1318,7 +1322,7 @@ export
             // Ctors
             ZOrderTreePoint() = default;
 
-            ZOrderTreePoint(std::span<VectorType const> const&vpt, DepthType nDepthMax,
+            ZOrderTreePoint(std::span<VectorType const> const&vpt, DepthType nDepthMax = 0,
                             std::optional<BoxType> const&oBoxSpace = std::nullopt,
                             max_element_type nElementMaxInNode = max_element_default) noexcept {
                 Create(*this, vpt, nDepthMax, oBoxSpace, nElementMaxInNode);
